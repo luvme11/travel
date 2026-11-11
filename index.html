@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>여행 플래너</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{--bg:#fff;--text:#37352f;--sub:#9b9a97;--line:#e9e9e7;--hover:#f1f1ef;--card:#fbfbfa;--cover:linear-gradient(120deg,#fbe4e4,#e7f0fb 60%,#e4f3ea)}
+@media (prefers-color-scheme:dark){:root{--bg:#191919;--text:#e6e6e4;--sub:#8d8d8b;--line:#2f2f2f;--hover:#262626;--card:#202020;--cover:linear-gradient(120deg,#3a2a2a,#26323f 60%,#243a2e)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:ui-sans-serif,-apple-system,'Segoe UI','Malgun Gothic','Apple SD Gothic Neo',sans-serif;font-size:15px}
+.cover{height:150px;background:var(--cover)}
+.page{max-width:820px;margin:0 auto;padding:0 24px 80px}
+.icon{width:76px;height:76px;margin-top:-38px;display:flex;align-items:center;justify-content:center;border-radius:14px;overflow:hidden;font-size:60px;line-height:1;position:relative}
+.icon img{width:100%;height:100%;object-fit:cover;display:block}
+.icon.has{border:3px solid var(--bg);background:var(--bg)}
+input,select,textarea{font-family:inherit;font-size:inherit;color:var(--text);background:transparent;border:none;outline:none;border-radius:6px;padding:5px 6px;width:100%}
+input:hover,textarea:hover,input:focus,textarea:focus{background:var(--hover)}
+#title{font-size:38px;font-weight:700;padding:6px 4px;margin:8px 0 14px}
+.prop{display:flex;align-items:center;min-height:34px}
+.prop .k{width:150px;color:var(--sub);flex-shrink:0;padding-left:4px}
+.prop .v{flex:1;padding:5px 6px}
+.prop input{max-width:220px}
+hr{border:none;border-top:1px solid var(--line);margin:22px 0}
+h2{font-size:22px;margin:26px 0 10px}
+
+.day{margin-bottom:30px}
+.dh{display:flex;align-items:center;gap:8px;padding:4px 0}
+.arrow{cursor:pointer;color:var(--sub);width:22px;text-align:center;user-select:none}
+.dh b{font-size:20px}
+.dh input[type=date]{width:150px;color:var(--sub)}
+.dh .tot{margin-left:auto;color:var(--sub);font-size:14px}
+.del{opacity:0;cursor:pointer;color:var(--sub);padding:2px 7px;border-radius:6px;user-select:none}
+.del:hover{background:var(--hover)}
+.dh:hover .del,.item:hover .del{opacity:1}
+textarea{resize:none;overflow:hidden;line-height:1.6}
+textarea.dnote{min-height:48px;padding:8px 30px;margin-bottom:6px}
+
+/* 일정 카드 */
+.item{display:flex;margin:4px 0 0 8px;position:relative}
+.item .b{flex:1;position:relative;border-left:2px solid var(--line);padding:6px 6px 14px 18px}
+.item .b::before{content:"";position:absolute;box-sizing:border-box;left:-7px;top:26px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--sub)}
+.item .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.place{font-size:17px;font-weight:600;padding:4px 6px}
+.pl{position:relative;display:flex;align-items:center}
+.emo{cursor:pointer;font-size:20px;padding:2px 6px;border-radius:6px;user-select:none;flex-shrink:0}
+.emo:hover{background:var(--hover)}
+.pop{position:absolute;top:100%;left:0;z-index:20;width:312px;max-width:92vw;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.pop span{text-align:center;cursor:pointer;font-size:19px;padding:3px 0;border-radius:6px}
+.pop span:hover{background:var(--hover)}
+.pop .tabs{display:flex;flex-wrap:wrap;gap:2px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.pop .tabs span.on{background:var(--hover)}
+.pop .grid{display:grid;grid-template-columns:repeat(9,1fr);gap:2px;max-height:260px;overflow-y:auto}
+.pop .clr{display:block;font-size:13px;color:var(--sub);padding:6px 5px 2px;text-align:left}
+.meta{display:flex;gap:8px;align-items:center;margin:4px 0 2px 2px}
+.meta select{appearance:none;cursor:pointer;width:auto;font-size:13px;padding:3px 11px;border-radius:5px}
+.cost{display:flex;align-items:center;background:var(--hover);border-radius:6px;padding:0 10px 0 4px}
+.cost input{width:100px;text-align:right;font-size:14px;padding:4px}
+.cost input:hover,.cost input:focus{background:transparent}
+.cost span{color:var(--sub);font-size:13px}
+textarea.note{min-height:40px;font-size:14px;padding:6px;margin-top:4px}
+.view{white-space:pre-wrap;word-break:break-word;line-height:1.6;cursor:text;border-radius:6px}
+.view:hover{background:var(--hover)}
+.view a{color:#2383e2;text-decoration:underline}
+.view.note{font-size:14px;padding:6px;margin-top:4px}
+.view.dnote{padding:8px 30px;margin-bottom:6px}
+.view.memo,textarea.memo{min-height:140px;padding:8px}
+.item .del{position:absolute;right:8px;top:8px}
+.c0{background:var(--hover);color:var(--sub)}
+.c1{background:#d3e5ef;color:#183347}.c2{background:#e8deee;color:#412454}.c3{background:#fadec9;color:#49290e}
+.c7{background:#dbe4ff;color:#1f2f66}.c8{background:#d4efe9;color:#0f3f3b}
+.c4{background:#dbeddb;color:#1c3829}.c5{background:#f5e0e9;color:#4c2337}.c6{background:#e3e2e0;color:#32302c}
+.add{color:var(--sub);padding:7px 10px;cursor:pointer;border-radius:6px;display:inline-block;margin:6px 0 0 24px}
+.add:hover{background:var(--hover)}
+.addday{color:var(--sub);padding:7px 10px;cursor:pointer;border-radius:6px;display:inline-block}
+.addday:hover{background:var(--hover)}
+.tag{display:inline-block;padding:2px 9px;border-radius:4px;font-size:13px;margin:0 8px 6px 0}
+@media(max-width:600px){.prop .k{width:100px}}
+
+.trow{display:flex;align-items:center;gap:10px;margin:8px 0 6px}
+.trow #title{margin:0;flex:1;min-width:0}
+.gear{flex-shrink:0;background:var(--hover);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:7px 14px;cursor:pointer;font-family:inherit;font-size:14px;white-space:nowrap}
+.gear:hover{background:var(--line)}
+.status{font-size:13px;color:var(--sub);margin:2px 4px 14px;min-height:1.4em}
+.status.err,.msg.err{color:#e5384f}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:16px}
+.modal[hidden]{display:none}
+.mbox{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:12px;width:100%;max-width:560px;max-height:88vh;overflow:auto;padding:18px;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.mhead{display:flex;justify-content:space-between;align-items:center}
+.mhead h2{margin:0}
+.mtabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:12px 0 16px}
+.mtabs button{background:transparent;color:var(--sub);border:0;border-bottom:2px solid transparent;border-radius:0;padding:8px 12px;cursor:pointer;font-family:inherit;font-size:14px}
+.mtabs button.on{color:var(--text);font-weight:700;border-bottom-color:#2383e2}
+.sec{padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--line)}
+.sec:last-child{border-bottom:0;margin-bottom:0}
+.sec h3{margin:0 0 10px;font-size:15px}
+.mnote{font-size:13px;color:var(--sub);margin:8px 0;line-height:1.55}
+.msg{font-size:13px;min-height:1.4em;margin:8px 0}
+.btn{background:#2383e2;color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-family:inherit;font-size:14px;position:relative;overflow:hidden;display:inline-block}
+.btn.ghost{background:var(--hover);color:var(--text)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.afile{position:absolute;width:1px;height:1px;opacity:0}
+.iconset{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.iprev{width:72px;height:72px;border-radius:14px;border:1px solid var(--line);background:var(--hover);display:flex;align-items:center;justify-content:center;font-size:44px;overflow:hidden;position:relative}
+.iprev img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pop.inline{position:static;width:auto;max-width:none;box-shadow:none;margin-top:10px}
+.swatches{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.swatch{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
+.swatch.on{box-shadow:0 0 0 2px var(--bg),0 0 0 4px #2383e2}
+.colorpick{display:inline-flex;align-items:center;gap:8px;font-size:14px}
+.colorpick input{width:44px;height:36px;padding:2px;border:1px solid var(--line);border-radius:6px;cursor:pointer}
+.field{display:grid;gap:5px;margin-bottom:12px}
+.field label{font-size:13px;color:var(--sub)}
+.field input{border:1px solid var(--line);padding:9px 10px;border-radius:8px}
+.tg{margin-bottom:6px}
+.tgh{display:flex;align-items:center;gap:6px;padding:2px 0;border-radius:6px}
+.tgh:hover{background:var(--hover)}
+.tgh:hover .del{opacity:1}
+.tgt{font-size:17px;font-weight:600;padding:5px 6px}
+.tgb{margin:2px 0 14px 11px;padding-left:16px;border-left:2px solid var(--line)}
+textarea.tgnote,.view.tgnote{min-height:72px;font-size:14px;padding:8px}
+.tgb .item{margin-left:0}
+.tgb .add{margin:6px 0 0 0}
+.adds{margin-left:24px}
+.adds .add{margin:6px 4px 0 0}
+
+/* ---------- 디자인 개편 ---------- */
+:root{--bg:#fbfaf8;--text:#2b2a28;--sub:#8f8c86;--line:#ebe8e2;--hover:#f3f1ec;--card:#fff;--acc:#4f7cff;--cover:linear-gradient(120deg,#ffd9d4,#dbe7ff 55%,#d6f0e0)}
+@media (prefers-color-scheme:dark){:root{--bg:#16161a;--text:#ececea;--sub:#8b8b90;--line:#2a2a30;--hover:#232329;--card:#1e1e24;--acc:#7c9dff;--cover:linear-gradient(120deg,#3a2a2e,#26303f 55%,#243a2e)}}
+body{font-family:'Pretendard Variable',Pretendard,-apple-system,'Segoe UI','Malgun Gothic','Apple SD Gothic Neo',sans-serif;letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
+.cover{height:190px}
+.page{max-width:780px}
+.icon{width:84px;height:84px;margin-top:-48px;border-radius:24px;font-size:62px}
+.icon.has{box-shadow:0 4px 14px rgba(0,0,0,.12)}
+#title{font-size:34px;letter-spacing:-.03em}
+.gear{border-radius:999px;padding:8px 16px}
+.status{font-size:12.5px}
+
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:8px 0 4px}
+@media(min-width:660px){.stats{grid-template-columns:repeat(4,1fr)}}
+.prop{display:block;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px 15px;min-height:0}
+.prop .k{width:auto;padding:0;font-size:12.5px;margin-bottom:6px}
+.prop .v{padding:0;font-size:18px;font-weight:700;letter-spacing:-.02em}
+.prop input{max-width:none;font-size:18px;font-weight:700;padding:2px 0;border-radius:0}
+.prop input:hover,.prop input:focus{background:transparent}
+
+hr{border-top:1px dashed var(--line);margin:30px 0 6px}
+h2{font-size:18px;font-weight:700;margin:24px 0 14px;letter-spacing:-.02em}
+
+.day{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px 16px 6px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.03)}
+.dh b{font-size:15px;background:var(--hover);padding:4px 13px;border-radius:999px}
+.dh .tot{font-weight:600;color:var(--text);font-size:13.5px}
+.item .card{background:var(--bg);border:1px solid var(--line);border-radius:14px}
+.item .b::before{border-color:var(--acc);background:var(--card)}
+.place{font-weight:700}
+.cost{border-radius:8px}
+
+.add,.addday{border:1px dashed var(--line);border-radius:12px;color:var(--sub);padding:9px 16px;font-size:14px;transition:.15s}
+.add:hover,.addday:hover{border-color:var(--acc);color:var(--acc);background:transparent}
+.addday{display:block;text-align:center;border-radius:16px;padding:13px}
+.tgb .add{margin:8px 0 6px 0}
+
+.tag{border-radius:999px;padding:5px 13px;font-weight:600}
+
+.tg{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 14px;margin-bottom:10px}
+.tgh:hover{background:transparent}
+.tgb{border-left:0;padding-left:0;margin:2px 0 8px 0}
+.tgb .item{margin-left:0}
+
+.btn{background:var(--acc);border-radius:10px}
+.btn.ghost{background:var(--hover)}
+.mbox{border-radius:20px}
+.mtabs button.on{border-bottom-color:var(--acc)}
+.swatch.on{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--acc)}
+.view a{color:var(--acc)}
+
+.trips{display:flex;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:15;background:var(--bg);padding:12px 0 8px;margin-top:6px}
+.trip{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);cursor:pointer;color:var(--sub);font-weight:600;font-size:14px;transition:.15s}
+.trip:not(.on):hover{border-color:var(--acc);color:var(--acc)}
+.trip.on{background:var(--acc);border-color:var(--acc);color:#fff;cursor:default}
+.trip.on input{background:transparent;color:#fff;font-weight:600;padding:0;border-radius:0;width:auto;min-width:5ch}
+.trip.on input::placeholder{color:rgba(255,255,255,.7)}
+.trip.on input:hover,.trip.on input:focus{background:transparent}
+.trip .tx{opacity:.75;font-size:12px;cursor:pointer}
+.trip .tx:hover{opacity:1}
+.trip.new{border-style:dashed;background:transparent}
+
+.app{display:flex;min-height:100vh}
+.main{flex:1;min-width:0}
+:root{--side:#f6f4f0;--sh:rgba(0,0,0,.045);--son:rgba(0,0,0,.08)}
+@media (prefers-color-scheme:dark){:root{--side:#1b1b20;--sh:rgba(255,255,255,.05);--son:rgba(255,255,255,.1)}}
+.side{width:250px;flex-shrink:0;background:var(--side);border-right:1px solid var(--line);position:sticky;top:0;height:100vh;overflow-y:auto;padding:14px 8px}
+.sh{display:flex;align-items:center;justify-content:space-between;padding:4px 10px 10px;color:var(--sub);font-size:13px;font-weight:600}
+.sbtn{background:transparent;border:0;color:var(--sub);cursor:pointer;font-size:16px;border-radius:8px;padding:2px 8px;font-family:inherit}
+.sbtn:hover{background:var(--sh)}
+.si{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:14.5px;color:var(--text)}
+.si:hover{background:var(--sh)}
+.si.on{background:var(--son);font-weight:600}
+.si .ic{font-size:16px}
+.si .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.si .x{opacity:0;color:var(--sub);font-size:12px;padding:2px 6px;border-radius:6px}
+.si:hover .x{opacity:1}
+.si .x:hover{background:var(--son)}
+.si .x.arm{opacity:1;color:#e5384f;font-weight:600;font-size:12.5px}
+@media(hover:none){.si .x{opacity:1}}
+.si.add{color:var(--sub);margin-top:6px}
+.sbtn.open{display:none;position:fixed;left:12px;top:12px;z-index:40;background:var(--card);border:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.08);padding:6px 11px}
+body.side-closed .side{display:none}
+body.side-closed .sbtn.open{display:block}
+.scrim{display:none}
+@media(max-width:760px){
+  .side{position:fixed;left:0;top:0;z-index:56;width:270px;box-shadow:0 0 40px rgba(0,0,0,.25)}
+  body:not(.side-closed) .scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:55}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side" id="side">
+  <div class="sh"><span>여행지</span><button class="sbtn" id="sideClose" type="button" title="목록 접기">«</button></div>
+  <div id="tlist"></div>
+  <div class="si add" id="tAdd">＋ 새 여행지</div>
+</aside>
+<div class="main">
+<div class="cover" id="cover"></div>
+<div class="page">
+  <div class="icon" id="icon"><span id="iconEmo">✈️</span><img id="iconImg" alt="" hidden></div>
+  <div class="trow"><input id="title" placeholder="제목 없음"><button class="gear" id="openSet" type="button">⚙ 설정</button></div>
+  <p class="status" id="status"></p>
+
+  <div class="stats">
+  <div class="prop"><div class="k">💰 총 예산</div><div class="v"><input id="budget" type="number" placeholder="금액 입력"></div></div>
+  <div class="prop"><div class="k">🧾 쓴 금액</div><div class="v" id="spent"></div></div>
+  <div class="prop"><div class="k">🪙 남은 예산</div><div class="v" id="left"></div></div>
+  <div class="prop"><div class="k">📆 하루 평균</div><div class="v" id="avg"></div></div>
+  </div>
+
+  <hr>
+  <h2>📅 일정</h2>
+  <div id="days"></div>
+  <span class="addday" id="addDay">+ 하루 추가</span>
+
+  <hr>
+  <h2>📊 분류별 지출</h2>
+  <div id="cats"></div>
+
+  <hr>
+  <h2>🧾 예약 · 정보</h2>
+  <div id="toggles"></div>
+  <span class="addday" id="addTg">+ 토글 추가</span>
+</div>
+</div>
+</div>
+<button class="sbtn open" id="sideOpen" type="button" title="여행지 목록 열기">☰</button>
+<div class="scrim" id="scrim"></div>
+
+<div class="modal" id="modal" hidden>
+  <div class="mbox" role="dialog" aria-modal="true">
+    <div class="mhead"><h2>설정</h2><button class="btn ghost" id="mClose" type="button">닫기</button></div>
+    <div class="mtabs">
+      <button id="tab-look" class="on" type="button">화면</button>
+      <button id="tab-gh" type="button">GitHub 연결</button>
+    </div>
+
+    <section id="pane-look">
+      <div class="sec">
+        <h3>아이콘</h3>
+        <div class="iconset">
+          <div class="iprev"><span id="iprevEmo">✈️</span><img id="iprevImg" alt="" hidden></div>
+          <div class="btns"><label class="btn">이미지 올리기<input class="afile" id="iconFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label></div>
+        </div>
+        <p class="msg" id="iconMsg"></p>
+        <p class="mnote">내 이미지를 올리거나 아래에서 이모티콘을 고르세요. 이미지는 정사각형으로 잘려서 들어가고 브라우저 탭 아이콘으로도 쓰여요.</p>
+        <div id="iconPicker"></div>
+      </div>
+      <div class="sec">
+        <h3>상단 배경 색</h3>
+        <div class="swatches" id="swatches"></div>
+        <div class="btns">
+          <label class="colorpick">직접 고르기 <input type="color" id="coverColor" value="#fbe4e4"></label>
+          <button class="btn ghost" id="coverReset" type="button">기본색으로</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="pane-gh" hidden>
+      <div class="field"><label for="gh-repo">저장소 (아이디/저장소 이름)</label>
+        <input type="text" id="gh-repo" autocomplete="off" spellcheck="false" placeholder="예: myname/my-travel"></div>
+      <div class="field"><label for="gh-branch">브랜치</label>
+        <input type="text" id="gh-branch" autocomplete="off" spellcheck="false" placeholder="main"></div>
+      <div class="field"><label for="gh-token">GitHub 토큰</label>
+        <input type="password" id="gh-token" autocomplete="off" spellcheck="false" placeholder="github_pat_… (비워 두면 기존 토큰 유지)"></div>
+      <p class="msg" id="gh-state" role="status"></p>
+      <div class="btns">
+        <button class="btn" id="gh-save" type="button">저장</button>
+        <button class="btn ghost" id="gh-show" type="button">보기</button>
+        <button class="btn ghost" id="gh-clear" type="button">토큰 지우기</button>
+      </div>
+      <p class="mnote">일정·예산·메모와 아이콘은 저장소의 travel-data/data.json 파일에 저장돼요. 토큰은 그 저장소의 Contents 읽기·쓰기 권한이 필요하고, 이 브라우저 안에만 보관돼요. 토큰이 없으면 이 브라우저에만 저장돼요. 저장소가 공개(Public)면 내용이 남에게도 보일 수 있으니 비공개(Private) 저장소를 추천해요. GitHub Pages 주소로 열면 저장소 이름은 자동으로 찾아요.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+var KEY='travelPlannerGH',OLD='travelPlannerData',GH_REPO='tp-gh-repo',GH_BRANCH='tp-gh-branch',GH_KEY='tp-gh-token',DIRTY='tp-dirty',DATA_PATH='travel-data/data.json';
+var CATS=['분류','항공권','호텔','예약','교통','식비','관광','쇼핑','기타'];
+var CIDX={'교통':1,'호텔':2,'식비':3,'관광':4,'쇼핑':5,'기타':6,'항공권':7,'예약':8};
+function cls(c){return 'c'+(CIDX[c]||0)}
+function ls(k){try{return localStorage.getItem(k)||''}catch(e){return ''}}
+function lss(k,v){try{if(v)localStorage.setItem(k,v);else localStorage.removeItem(k);return true}catch(e){return false}}
+var D=null;
+try{D=JSON.parse(ls(KEY)||ls(OLD)||'null')}catch(e){}
+function defToggles(m){return [{t:'✈️ 항공권',b:'',open:true},{t:'🏨 호텔',b:'',open:true},{t:'🎟️ 예약',b:'',open:true},{t:'📝 메모',b:m||'',open:true}]}
+function link(){D.cur=Math.min(Math.max(0,D.cur|0),D.trips.length-1);D.days=D.trips[D.cur].days;D.toggles=D.trips[D.cur].toggles}
+function ser(){return JSON.stringify(D,function(k,v){return(this===D&&(k==='days'||k==='toggles'))?undefined:v})}
+function fixD(){
+  if(!D||typeof D!=='object')D={};
+  D.title=D.title||'';D.budget=D.budget||'';D.memo=D.memo||'';
+  var _t=D.title,_b=D.budget;
+  if(!D.trips||!D.trips.length)D.trips=[{name:'',days:(D.days&&D.days.length)?D.days:[{date:'',items:[]}],toggles:D.toggles||defToggles(D.memo)}];
+  D.trips.forEach(function(t,i){
+    if(!t.name&&i==0&&_t)t.name=_t;
+    if(t.budget===undefined)t.budget=(i==0?_b:'')||'';
+    t.name=t.name||'';
+    if(!t.days||!t.days.length)t.days=[{date:'',items:[]}];
+    if(!t.toggles)t.toggles=defToggles('');
+    t.days.forEach(function(d){d.items=d.items||[];d.items.forEach(function(it){if(it.cat==='숙박')it.cat='호텔'})});
+    t.toggles.forEach(function(g){if(g.t==='🎟️ 예약 (놀이공원 등)')g.t='🎟️ 예약'});
+  });
+  D.title='';D.budget='';
+  D.icon=D.icon||'';D.iconImg=D.iconImg||'';D.cover=D.cover||'';
+  link();
+}
+fixD();
+function ghCfg(){
+  var repo=ls(GH_REPO).trim(),branch=ls(GH_BRANCH).trim()||'main';
+  if(!repo&&/\.github\.io$/i.test(location.hostname)){
+    var owner=location.hostname.split('.')[0],seg=location.pathname.split('/')[1]||'';
+    repo=owner+'/'+(seg&&!/\.html?$/i.test(seg)?seg:owner+'.github.io');
+  }
+  return {repo:repo,branch:branch,token:ls(GH_KEY)};
+}
+function b64enc(s){return btoa(unescape(encodeURIComponent(s)))}
+function b64dec(s){return decodeURIComponent(escape(atob(String(s).replace(/\s/g,''))))}
+function status(t,err){var e=$('status');e.textContent=t;e.className='status'+(err?' err':'')}
+function ghUrl(c){return 'https://api.github.com/repos/'+c.repo+'/contents/'+DATA_PATH}
+function hdr(c){var h={'Accept':'application/vnd.github+json'};if(c.token)h.Authorization='Bearer '+c.token;return h}
+function errText(code){
+  if(code==401||code==403)return 'GitHub 토큰이 맞지 않거나 권한이 없어요. (그 저장소의 Contents 읽기·쓰기 권한이 필요해요)';
+  if(code==404)return '저장소를 찾을 수 없어요. 저장소 이름과 토큰 권한을 확인해 주세요.';
+  if(!code)return '인터넷 연결을 확인해 주세요.';
+  return 'GitHub에 저장하지 못했어요. (오류 '+code+')';
+}
+function hm(){var d=new Date();return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+var sha=null,saveT=null,saving=false,again=false;
+function save(){
+  lss(KEY,ser());lss(DIRTY,'1');
+  var c=ghCfg();
+  if(c.repo&&c.token){status('GitHub에 저장하는 중…');clearTimeout(saveT);saveT=setTimeout(push,1200)}
+  else status('이 브라우저에만 저장돼요 (⚙ 설정 → GitHub 연결에서 저장소와 토큰을 넣으면 GitHub에도 저장돼요)');
+}
+function getSha(c){
+  return fetch(ghUrl(c)+'?ref='+encodeURIComponent(c.branch),{headers:hdr(c)}).then(function(r){
+    if(r.status==404){sha=null;return}
+    if(!r.ok)throw r;
+    return r.json().then(function(j){sha=j.sha});
+  });
+}
+function push(){
+  var c=ghCfg();
+  if(!c.repo||!c.token)return;
+  if(saving){again=true;return}
+  saving=true;
+  var body=b64enc(ser());
+  function put(){
+    var o={message:'update travel planner',content:body,branch:c.branch};
+    if(sha)o.sha=sha;
+    return fetch(ghUrl(c),{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},hdr(c)),body:JSON.stringify(o)});
+  }
+  put().then(function(r){
+    if(r.status==409||r.status==422)return getSha(c).then(function(){return put()});
+    return r;
+  }).then(function(r){
+    if(!r.ok)throw r;
+    return r.json();
+  }).then(function(j){
+    sha=j.content.sha;
+    if(!again)lss(DIRTY,'');
+    status('GitHub에 저장됨 ✓ '+hm());
+  }).catch(function(r){status(errText(r&&r.status),true)})
+  .then(function(){saving=false;if(again){again=false;push()}});
+}
+function loadRemote(){
+  var c=ghCfg();
+  if(!c.repo){status('이 브라우저에만 저장돼요 (⚙ 설정 → GitHub 연결에서 저장소를 연결해 보세요)');return Promise.resolve()}
+  status('GitHub에서 불러오는 중…');
+  return fetch(ghUrl(c)+'?ref='+encodeURIComponent(c.branch),{headers:hdr(c)}).then(function(r){
+    if(r.status==404){sha=null;return null}
+    if(!r.ok)throw r;
+    return r.json();
+  }).then(function(j){
+    if(j){
+      sha=j.sha;
+      if(!ls(DIRTY)){
+        try{var rd=JSON.parse(b64dec(j.content));if(rd&&(rd.days||rd.trips)){D=rd;fixD();lss(KEY,ser());applyAll()}}catch(e){}
+      }
+    }
+    if(c.token&&(ls(DIRTY)||!sha)){push();status('GitHub에 저장하는 중…')}
+    else if(c.token)status('GitHub와 연결됨 ✓ ('+c.repo+')');
+    else status(j?'GitHub에서 불러왔어요. 토큰을 넣으면 저장도 돼요.':'GitHub에 아직 저장된 파일이 없어요. 토큰을 넣으면 만들어져요.');
+  }).catch(function(r){status(errText(r&&r.status),true)});
+}
+function defCat(t){t=t||'';if(/항공/.test(t))return '항공권';if(/호텔|숙/.test(t))return '호텔';if(/예약/.test(t))return '예약';return ''}
+function renderToggles(){
+  var box=$('toggles');box.innerHTML='';
+  D.toggles.forEach(function(tg,i){
+    var el=document.createElement('div');el.className='tg';
+    var open=tg.open!==false;
+    var h=document.createElement('div');h.className='tgh';
+    h.innerHTML='<span class="arrow">'+(open?'▾':'▸')+'</span><input class="tgt" placeholder="제목 없음"><span class="del" title="삭제">🗑</span>';
+    var ti=h.querySelector('.tgt');ti.value=tg.t||'';
+    ti.oninput=function(){tg.t=ti.value;save()};
+    h.querySelector('.arrow').onclick=function(){tg.open=!open;save();renderToggles()};
+    h.querySelector('.del').onclick=function(){
+      if(tg.b&&!confirm('이 토글을 삭제할까요? 안에 적은 내용도 같이 지워져요.'))return;
+      D.toggles.splice(i,1);save();renderToggles()};
+    el.appendChild(h);
+    if(open){
+      var b=document.createElement('div');b.className='tgb';
+      if(/메모/.test(tg.t||'')){
+        b.appendChild(noteBox('tgnote','여기에 적어보세요',tg,'b'));
+      }else{
+      var list=tg.items=tg.items||[];
+      list.forEach(function(it,ii){b.appendChild(buildItem(it,list,ii,renderToggles))});
+      var ad=document.createElement('span');ad.className='add';ad.textContent='+ 추가';
+      ad.onclick=function(){
+        var c=defCat(tg.t);
+        list.push({place:'',icon:({'항공권':'✈️','호텔':'🏨','예약':'🎟️'})[c]||'',cost:'',memo:'',cat:c});
+        save();renderToggles();totals()};
+      b.appendChild(ad);
+      }
+      el.appendChild(b);
+    }
+    box.appendChild(el);
+  });
+  document.querySelectorAll('textarea.tgnote,textarea.note').forEach(fit);
+}
+$('addTg').onclick=function(){D.toggles.push({t:'',b:'',open:true});save();renderToggles()};
+function isMobile(){return window.innerWidth<=760}
+function setSide(open){document.body.classList.toggle('side-closed',!open);if(!isMobile())lss('tp-side',open?'':'closed')}
+function selTrip(i){D.cur=i;link();save();applyAll();if(isMobile())setSide(false)}
+function renderSide(){
+  var box=$('tlist');box.innerHTML='';
+  D.trips.forEach(function(t,i){
+    var el=document.createElement('div');el.className='si'+(i==D.cur?' on':'');
+    el.innerHTML='<span class="nm"></span><span class="x" title="삭제">✕</span>';
+    var nm=el.querySelector('.nm');nm.textContent=t.name||'제목 없음';if(!t.name)nm.style.opacity='.5';
+    el.onclick=function(){selTrip(i)};
+    var x=el.querySelector('.x');
+    if(D.trips.length<2)x.remove();
+    else x.onclick=function(e){
+      e.stopPropagation();
+      if(!x.classList.contains('arm')){
+        x.classList.add('arm');x.textContent='삭제?';
+        setTimeout(function(){x.classList.remove('arm');x.textContent='✕'},3000);
+        return;
+      }
+      D.trips.splice(i,1);
+      if(i<D.cur)D.cur--;else if(i==D.cur)D.cur=Math.max(0,i-1);
+      link();save();applyAll()};
+    box.appendChild(el);
+  });
+}
+$('tAdd').onclick=function(){
+  D.trips.push({name:'',budget:'',days:[{date:'',items:[]}],toggles:defToggles('')});
+  D.cur=D.trips.length-1;link();save();applyAll();
+  if(isMobile())setSide(false);
+  $('title').focus();
+};
+$('sideClose').onclick=function(){setSide(false)};
+$('sideOpen').onclick=function(){setSide(true)};
+$('scrim').onclick=function(){setSide(false)};
+if(isMobile()||ls('tp-side')==='closed')document.body.classList.add('side-closed');
+function applyAll(){
+  var tr=D.trips[D.cur];
+  renderSide();
+  $('title').value=tr.name;$('budget').value=tr.budget;
+  renderToggles();
+  document.title=tr.name||'여행 플래너';
+  render();applyLook();
+}
+function won(n){return Number(n||0).toLocaleString('ko-KR')+'원'}
+function tsum(t){return (t.toggles||[]).reduce(function(s,g){return s+(g.items||[]).reduce(function(a,i){return a+Number(i.cost||0)},0)},0)}
+function dtot(d){return d.items.reduce(function(s,i){return s+Number(i.cost||0)},0)}
+function $(id){return document.getElementById(id)}
+function linkify(t){
+  var e=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return e.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+}
+function noteBox(cls,ph,obj,key){
+  var w=document.createElement('div');
+  var ta=document.createElement('textarea');ta.className=cls;ta.placeholder=ph;ta.value=obj[key]||'';
+  var v=document.createElement('div');v.className='view '+cls;
+  function show(){
+    if(ta.value.trim()){v.innerHTML=linkify(ta.value);v.style.display='block';ta.style.display='none'}
+    else{v.style.display='none';ta.style.display='block'}
+  }
+  ta.oninput=function(){obj[key]=ta.value;save();fit(ta)};
+  ta.onblur=show;
+  v.onclick=function(e){if(e.target.closest('a'))return;v.style.display='none';ta.style.display='block';fit(ta);ta.focus()};
+  w.appendChild(ta);w.appendChild(v);show();
+  return w;
+}
+var EMO=[["🧳", "여행", ["📍", "✈️", "🧳", "🗺️", "🧭", "🏖️", "🏝️", "🏕️", "⛺", "🌅", "🌄", "🌇", "🌆", "🌉", "🌃", "🛂", "🛃", "🛄", "🛅", "🎫", "📷", "📸", "🎒", "🕶️", "👓", "🧴", "🌴", "🏯", "🏰", "🗼", "🗽", "🗾", "🗿", "🌋", "🌊", "🚩", "🛎️"]], ["🚆", "교통", ["🚀", "🚁", "🚂", "🚃", "🚄", "🚅", "🚆", "🚇", "🚈", "🚉", "🚊", "🚋", "🚌", "🚍", "🚎", "🚏", "🚐", "🚑", "🚒", "🚓", "🚔", "🚕", "🚖", "🚗", "🚘", "🚙", "🚚", "🚛", "🚜", "🚝", "🚞", "🚟", "🚠", "🚡", "🚢", "🚣", "🚤", "🚥", "🚦", "🚧", "🚨", "🚪", "🚫", "🚬", "🚭", "🚮", "🚯", "🚰", "🚱", "🚲", "🚳", "🚴", "🚵", "🛴", "🛵", "🛶", "🛹", "🛰️", "🛳️", "🛥️", "🛩️", "🛫", "🛬", "⛵", "⛴️", "⛽", "⚓"]], ["🍜", "음식", ["🌭", "🌮", "🌯", "🍅", "🍆", "🍇", "🍈", "🍉", "🍊", "🍋", "🍌", "🍍", "🍎", "🍏", "🍐", "🍑", "🍒", "🍓", "🍔", "🍕", "🍖", "🍗", "🍘", "🍙", "🍚", "🍛", "🍜", "🍝", "🍞", "🍟", "🍠", "🍡", "🍢", "🍣", "🍤", "🍥", "🍦", "🍧", "🍨", "🍩", "🍪", "🍫", "🍬", "🍭", "🍮", "🍯", "🍰", "🍱", "🍲", "🍳", "🍴", "🍵", "🍶", "🍷", "🍸", "🍹", "🍺", "🍻", "🍼", "🍽️", "🍾", "🍿", "🥐", "🥑", "🥒", "🥓", "🥔", "🥕", "🥖", "🥗", "🥘", "🥙", "🥚", "🥛", "🥜", "🥝", "🥞", "🥟", "🥠", "🥡", "🥢", "🥣", "🥤", "🥥", "🥦", "🥧", "🥨", "🥩", "🥪", "🥫", "🥬", "🥭", "🥮", "🥯", "🧀", "🧁", "☕"]], ["🏛️", "장소", ["🏠", "🏡", "🏢", "🏣", "🏤", "🏥", "🏦", "🏧", "🏨", "🏩", "🏪", "🏫", "🏬", "🏭", "🏮", "🏔️", "🏗️", "🏘️", "🏙️", "🏚️", "🏛️", "🏜️", "🏞️", "🏟️", "⛪", "⛲", "⛩️", "🕌", "🕍", "🕋", "🎠", "🎡", "🎢", "🎪"]], ["🌿", "자연", ["🌀", "🌁", "🌂", "🌈", "🌌", "🌍", "🌎", "🌏", "🌐", "🌑", "🌒", "🌓", "🌔", "🌕", "🌖", "🌗", "🌘", "🌙", "🌚", "🌛", "🌜", "🌝", "🌞", "🌟", "🌠", "🌰", "🌱", "🌲", "🌳", "🌵", "🌶️", "🌷", "🌸", "🌹", "🌺", "🌻", "🌼", "🌽", "🌾", "🌿", "🍀", "🍁", "🍂", "🍃", "🍄", "🌤️", "🌥️", "🌦️", "🌧️", "🌨️", "🌩️", "🌪️", "🌫️", "🌬️", "☀️", "☁️", "☂️", "☃️", "☄️", "⛄", "⛅", "⛈️", "☔", "⚡", "❄️", "💧", "🔥", "💐", "💮", "🏵️", "☘️"]], ["🐶", "동물", ["🐀", "🐁", "🐂", "🐃", "🐄", "🐅", "🐆", "🐇", "🐈", "🐉", "🐊", "🐋", "🐌", "🐍", "🐎", "🐏", "🐐", "🐑", "🐒", "🐓", "🐔", "🐕", "🐖", "🐗", "🐘", "🐙", "🐚", "🐛", "🐜", "🐝", "🐞", "🐟", "🐠", "🐡", "🐢", "🐣", "🐤", "🐥", "🐦", "🐧", "🐨", "🐩", "🐪", "🐫", "🐬", "🐭", "🐮", "🐯", "🐰", "🐱", "🐲", "🐳", "🐴", "🐵", "🐶", "🐷", "🐸", "🐹", "🐺", "🐻", "🐼", "🐽", "🐾", "🐿️", "🦀", "🦁", "🦂", "🦃", "🦄", "🦅", "🦆", "🦇", "🦈", "🦉", "🦊", "🦋", "🦌", "🦍", "🦎", "🦏", "🦐", "🦑", "🦒", "🦓", "🦔", "🦕", "🦖", "🦗", "🦘", "🦙", "🦚", "🦛", "🦜", "🦝", "🦞", "🦟", "🦠", "🦡", "🦢"]], ["🎬", "활동", ["🎀", "🎁", "🎂", "🎃", "🎄", "🎅", "🎆", "🎇", "🎈", "🎉", "🎊", "🎋", "🎌", "🎍", "🎎", "🎏", "🎐", "🎑", "🎓", "🎣", "🎤", "🎥", "🎦", "🎧", "🎨", "🎩", "🎬", "🎭", "🎮", "🎯", "🎰", "🎱", "🎲", "🎳", "🎴", "🎵", "🎶", "🎷", "🎸", "🎹", "🎺", "🎻", "🎼", "🎽", "🎾", "🎿", "🏀", "🏁", "🏂", "🏃", "🏄", "🏅", "🏆", "🏇", "🏈", "🏉", "🏊", "🏏", "🏐", "🏑", "🏒", "🏓", "⚽", "⚾", "⛳", "⛷️", "⛸️", "⛹️", "🛀", "🛌", "🧘", "🧖", "🤺", "🤼", "🤽", "🤾"]], ["🎒", "물건", ["💰", "💱", "💲", "💳", "💴", "💵", "💶", "💷", "💸", "💹", "💺", "💻", "💼", "💽", "💾", "💿", "📀", "📁", "📂", "📃", "📄", "📅", "📆", "📇", "📈", "📉", "📊", "📋", "📌", "📎", "📏", "📐", "📑", "📒", "📓", "📔", "📕", "📖", "📗", "📘", "📙", "📚", "📛", "📜", "📝", "📞", "📟", "📠", "📡", "📢", "📣", "📤", "📥", "📦", "📧", "📨", "📩", "📪", "📫", "📬", "📭", "📮", "📯", "📰", "📱", "📲", "📳", "📴", "📵", "📶", "📹", "📺", "📻", "📼", "🔋", "🔌", "🔍", "🔎", "🔏", "🔐", "🔑", "🔒", "🔓", "🔔", "🔕", "🔖", "🔗", "🔘", "🔙", "🔚", "🔛", "🔜", "🔝", "👑", "👒", "👔", "👕", "👖", "👗", "👘", "👙", "👚", "👛", "👜", "👝", "👞", "👟", "👠", "👡", "👢", "⌚", "⌛", "⏰", "☎️", "✉️", "✂️", "✏️", "✒️", "🧢", "🧣", "🧤", "🧥", "🧦", "💄", "💍", "💎", "💈", "💊", "🛍️", "🛒", "🛏️", "🛁", "🚽", "🚿", "🧹", "🧻", "🧼", "🧽", "🔦", "🔧", "🔨", "🗝️", "💡"]], ["❤️", "기호", ["💓", "💔", "💕", "💖", "💗", "💘", "💙", "💚", "💛", "💜", "💝", "💞", "💟", "🧡", "❤️", "🖤", "💋", "💌", "💢", "💣", "💤", "💥", "💦", "💨", "💩", "💪", "💫", "💬", "💭", "💯", "✅", "✔️", "✖️", "❌", "❎", "❓", "❔", "❕", "❗", "➕", "➖", "➗", "♻️", "⭐", "⭕", "✨", "✳️", "✴️", "❇️", "‼️", "⁉️", "⚠️", "⛔", "⬆️", "⬇️", "➡️", "⬅️", "↔️", "↕️", "🆕", "🆖", "🆗", "🆘", "🆙", "🆚", "🆒", "🆓", "🔴", "🔵", "🔶", "🔷", "🔸", "🔹", "🔺", "🔻", "🔼", "🔽", "⬛", "⬜", "◼️", "◻️", "◾", "◽", "🕐", "🕑", "🕒", "🕓", "🕔", "🕕", "🕖", "🕗", "🕘", "🕙", "🕚", "🕛"]], ["😀", "얼굴", ["😀", "😁", "😂", "😃", "😄", "😅", "😆", "😇", "😈", "😉", "😊", "😋", "😌", "😍", "😎", "😏", "😐", "😑", "😒", "😓", "😔", "😕", "😖", "😗", "😘", "😙", "😚", "😛", "😜", "😝", "😞", "😟", "😠", "😡", "😢", "😣", "😤", "😥", "😦", "😧", "😨", "😩", "😪", "😫", "😬", "😭", "😮", "😯", "😰", "😱", "😲", "😳", "😴", "😵", "😶", "😷", "😸", "😹", "😺", "😻", "😼", "😽", "😾", "😿", "🙀", "🙁", "🙂", "🙃", "🙄", "🙅", "🙆", "🙇", "🙈", "🙉", "🙊", "🙋", "🙌", "🙍", "🙎", "🙏", "🤐", "🤑", "🤒", "🤓", "🤔", "🤕", "🤖", "🤗", "🤘", "🤙", "🤚", "🤛", "🤜", "🤝", "🤞", "🤟", "🤠", "🤡", "🤢", "🤣", "🤤", "🤥", "🤦", "🤧", "🤨", "🤩", "🤪", "🤫", "🤬", "🤭", "🤮", "🤯", "🥰", "🥳", "🥴", "🥵", "🥺", "🧐", "👻", "👽", "👾", "💀", "👿", "👹", "👺"]], ["👍", "사람", ["👀", "👁️", "👂", "👃", "👄", "👅", "👆", "👇", "👈", "👉", "👊", "👋", "👌", "👍", "👎", "👏", "👐", "✊", "✋", "✌️", "✍️", "🦵", "🦶", "👣", "👤", "👥", "👦", "👧", "👨", "👩", "👪", "👫", "👬", "👭", "👰", "👱", "👴", "👵", "👶", "👷", "👸", "💁", "💂", "💃", "🕺"]]];
+var emoTab=0;
+function closePop(){document.querySelectorAll('.pop:not(.inline)').forEach(function(p){p.remove()})}
+function emojiPicker(onPick,onClear,clearLabel){
+  var pop=document.createElement('div');pop.className='pop';
+  pop.onclick=function(ev){ev.stopPropagation()};
+  function build(){
+    pop.innerHTML='';
+    var tabs=document.createElement('div');tabs.className='tabs';
+    EMO.forEach(function(c,i){var t=document.createElement('span');t.textContent=c[0];t.title=c[1];
+      if(i==emoTab)t.className='on';
+      t.onclick=function(){emoTab=i;build()};tabs.appendChild(t)});
+    var g=document.createElement('div');g.className='grid';
+    EMO[emoTab][2].forEach(function(x){var b=document.createElement('span');b.textContent=x;
+      b.onclick=function(){onPick(x)};g.appendChild(b)});
+    var c=document.createElement('span');c.className='clr';c.textContent=clearLabel;
+    c.onclick=function(){onClear()};
+    pop.appendChild(tabs);pop.appendChild(g);pop.appendChild(c);
+  }
+  build();
+  return pop;
+}
+document.addEventListener('click',closePop);
+function fit(t){t.style.height='auto';t.style.height=t.scrollHeight+'px'}
+
+function totals(){
+  var tr=D.trips[D.cur],sp=D.days.reduce(function(s,d){return s+dtot(d)},0)+tsum(tr),b=Number(tr.budget||0);
+  $('spent').textContent=won(sp);
+  $('left').textContent=b?won(b-sp):'-';
+  $('left').style.color=(b&&b-sp<0)?'#e5384f':'';
+  $('avg').textContent=won(Math.round(sp/D.days.length));
+  D.days.forEach(function(d,i){var e=$('dt'+i);if(e)e.textContent='합계 '+won(dtot(d))});
+  var by={};
+  function addBy(it){var c=it.cat||'';if(!c)return;by[c]=(by[c]||0)+Number(it.cost||0)}
+  D.days.forEach(function(d){d.items.forEach(addBy)});
+  (D.toggles||[]).forEach(function(g){(g.items||[]).forEach(addBy)});
+  var h='';
+  CATS.forEach(function(c,i){if(by[c])h+='<span class="tag '+cls(c)+'">'+c+' '+won(by[c])+'</span>'});
+  $('cats').innerHTML=h||'<span style="color:var(--sub)">일정에서 분류를 고르면 여기에 모여요</span>';
+}
+
+function buildItem(it,list,ii,rerender){
+        var r=document.createElement('div');r.className='item';
+        var opts=CATS.map(function(c){return '<option'+((it.cat||'분류')==c?' selected':'')+'>'+c+'</option>'}).join('');
+        r.innerHTML='<div class="b"><div class="card">'
+          +'<div class="pl"><span class="emo" title="이모티콘 고르기"></span><input class="place" placeholder="어디 가요? 뭐 해요?"></div>'
+          +'<div class="meta"><select>'+opts+'</select><div class="cost"><input type="number" placeholder="금액"><span>원</span></div></div>'
+          +'<div class="nb"></div>'
+          +'<span class="del" title="삭제">✕</span></div></div>';
+        var pl=r.querySelector('.place'),co=r.querySelector('.cost input'),sel=r.querySelector('select');
+        pl.value=it.place||'';co.value=it.cost||'';
+        var em=r.querySelector('.emo');
+        function paintE(){em.textContent=it.icon||'🙂';em.style.opacity=it.icon?1:.3}
+        paintE();
+        em.onclick=function(e){
+          e.stopPropagation();closePop();
+          var pop=emojiPicker(function(x){it.icon=x;save();paintE();closePop()},function(){it.icon='';save();paintE();closePop()},'이모티콘 지우기');
+          r.querySelector('.pl').appendChild(pop);
+        };
+        r.querySelector('.nb').appendChild(noteBox('note','자유롭게 적어보세요 (예약 정보, 후기, 링크 붙여넣기 등)',it,'memo'));
+        pl.oninput=function(){it.place=pl.value;save()};
+        co.oninput=function(){it.cost=co.value;save();totals()};
+        function paint(){sel.className=cls(it.cat||'')}
+        paint();
+        sel.onchange=function(){it.cat=sel.value=='분류'?'':sel.value;paint();save();totals()};
+        r.querySelector('.del').onclick=function(){list.splice(ii,1);save();rerender()};
+  return r;
+}
+
+function render(){
+  var box=$('days');box.innerHTML='';
+  D.days.forEach(function(day,di){
+    var el=document.createElement('div');el.className='day';
+    var open=!day.closed;
+    var head=document.createElement('div');head.className='dh';
+    head.innerHTML='<span class="arrow">'+(open?'▾':'▸')+'</span><b>'+(di+1)+'일차</b><input type="date"><span class="tot" id="dt'+di+'"></span><span class="del" title="이 날 삭제">🗑</span>';
+    head.querySelector('.arrow').onclick=function(){day.closed=!day.closed;save();render()};
+    var dt=head.querySelector('input');dt.value=day.date||'';
+    dt.onchange=function(){day.date=dt.value;save()};
+    head.querySelector('.del').onclick=function(){
+      if(D.days.length==1)D.days[0]={date:'',items:[]};else D.days.splice(di,1);
+      save();render()};
+    el.appendChild(head);
+    if(open){
+      day.items.forEach(function(it,ii){el.appendChild(buildItem(it,day.items,ii,render))});
+    }
+    box.appendChild(el);
+  });
+  totals();
+  document.querySelectorAll('textarea.note,textarea.dnote,textarea.memo').forEach(fit);
+}
+
+$('title').oninput=function(){D.trips[D.cur].name=this.value;document.title=this.value||'여행 플래너';renderSide();save()};
+$('budget').oninput=function(){D.trips[D.cur].budget=this.value;save();totals()};
+$('addDay').onclick=function(){D.days.push({date:'',items:[]});save();render()};
+
+/* ---------- 화면 설정 (아이콘·배경색) ---------- */
+var modal=$('modal'),PRESETS=['','#fde2e4','#fff1c9','#e2f0cb','#d3e5ef','#e8deee','#f5e0e9','#e3e2e0','#3b4252'];
+function setFavicon(){
+  var l=document.getElementById('fav');
+  if(!l){l=document.createElement('link');l.id='fav';l.rel='icon';document.head.appendChild(l)}
+  l.href=D.iconImg||('data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".88em" font-size="86">'+(D.icon||'✈️')+'</text></svg>'));
+}
+function applyLook(){
+  $('cover').style.background=D.cover||'';
+  var im=$('iconImg'),em=$('iconEmo'),ic=$('icon');
+  if(D.iconImg){im.src=D.iconImg;im.hidden=false;em.hidden=true;ic.classList.add('has')}
+  else{im.removeAttribute('src');im.hidden=true;em.hidden=false;em.textContent=D.icon||'✈️';ic.classList.remove('has')}
+  setFavicon();syncLookPane();
+}
+function syncLookPane(){
+  var pi=$('iprevImg'),pe=$('iprevEmo');
+  if(D.iconImg){pi.src=D.iconImg;pi.hidden=false;pe.hidden=true}
+  else{pi.removeAttribute('src');pi.hidden=true;pe.hidden=false;pe.textContent=D.icon||'✈️'}
+  var sw=$('swatches');
+  if(!sw.children.length)PRESETS.forEach(function(c){
+    var b=document.createElement('button');b.type='button';b.setAttribute('data-c',c);
+    b.style.background=c||'linear-gradient(120deg,#fbe4e4,#e7f0fb 60%,#e4f3ea)';b.title=c||'기본';
+    b.onclick=function(){D.cover=c;save();applyLook()};sw.appendChild(b)});
+  Array.prototype.forEach.call(sw.children,function(b){b.className='swatch'+(b.getAttribute('data-c')==D.cover?' on':'')});
+  if(/^#[0-9a-f]{6}$/i.test(D.cover))$('coverColor').value=D.cover;
+}
+function iconMsg(t,err){var m=$('iconMsg');m.textContent=t||'';m.className='msg'+(err?' err':'')}
+function downscale(file,max){
+  return new Promise(function(res,rej){
+    var fr=new FileReader();
+    fr.onload=function(){
+      var im=new Image();
+      im.onload=function(){
+        var s=Math.min(im.width,im.height),c=document.createElement('canvas');
+        c.width=c.height=max;
+        c.getContext('2d').drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,max,max);
+        res(c.toDataURL('image/png'));
+      };
+      im.onerror=rej;im.src=fr.result;
+    };
+    fr.onerror=rej;fr.readAsDataURL(file);
+  });
+}
+$('iconFile').onchange=function(){
+  var f=this.files&&this.files[0];this.value='';
+  if(!f)return;
+  iconMsg('올리는 중…');
+  downscale(f,192).then(function(url){D.iconImg=url;save();applyLook();iconMsg('아이콘을 바꿨어요.')})
+    .catch(function(){iconMsg('이미지를 읽지 못했어요. PNG, JPG, WEBP, GIF 파일을 올려 주세요.',true)});
+};
+var ip=emojiPicker(
+  function(x){D.icon=x;D.iconImg='';save();applyLook();iconMsg('')},
+  function(){D.icon='';D.iconImg='';save();applyLook();iconMsg('')},
+  '기본 아이콘(✈️)으로');
+ip.classList.add('inline');$('iconPicker').appendChild(ip);
+$('coverColor').oninput=function(){D.cover=this.value;save();applyLook()};
+$('coverReset').onclick=function(){D.cover='';save();applyLook()};
+
+/* ---------- 설정 창 + GitHub 연결 ---------- */
+function showTab(n){['look','gh'].forEach(function(k){$('tab-'+k).className=k==n?'on':'';$('pane-'+k).hidden=k!=n})}
+function openSet(){modal.hidden=false;document.body.style.overflow='hidden';showTab('look');iconMsg('');syncLookPane()}
+function closeSet(){modal.hidden=true;document.body.style.overflow='';$('gh-token').value=''}
+$('openSet').onclick=openSet;$('mClose').onclick=closeSet;
+modal.onclick=function(e){if(e.target===modal)closeSet()};
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!modal.hidden)closeSet()});
+$('tab-look').onclick=function(){showTab('look')};
+$('tab-gh').onclick=function(){showTab('gh');ghRender()};
+function ghMsg(t,err){var m=$('gh-state');m.textContent=t;m.className='msg'+(err?' err':'')}
+function ghRender(){
+  var c=ghCfg();
+  $('gh-repo').value=ls(GH_REPO)||c.repo||'';$('gh-branch').value=ls(GH_BRANCH)||'';
+  $('gh-token').value='';$('gh-token').type='password';$('gh-show').textContent='보기';
+  ghMsg(c.token?'저장된 토큰이 있어요 (끝 4자리 '+c.token.slice(-4)+').':'저장된 토큰이 없어요. 지금은 이 브라우저에만 저장돼요.');
+}
+$('gh-save').onclick=function(){
+  var repo=$('gh-repo').value.trim().replace(/^https?:\/\/github\.com\//i,'').replace(/\.git$/i,'').replace(/\/$/,'');
+  var branch=$('gh-branch').value.trim(),tok=$('gh-token').value.trim();
+  if(!/^[\w.\-]+\/[\w.\-]+$/.test(repo)){ghMsg('저장소는 아이디/저장소이름 형태로 적어 주세요. 예: myname/my-travel',true);return}
+  if(branch&&!/^[\w.\-\/]+$/.test(branch)){ghMsg('브랜치 이름이 올바르지 않아요.',true);return}
+  if(tok&&(/\s/.test(tok)||tok.length<20)){ghMsg('토큰 형식이 맞지 않아요. 공백 없이 전체를 붙여 넣어 주세요.',true);return}
+  var ok=lss(GH_REPO,repo)&&lss(GH_BRANCH,branch==='main'?'':branch)&&(!tok||lss(GH_KEY,tok));
+  if(!ok){ghMsg('이 브라우저에서는 저장할 수 없어요. (시크릿 창이거나 저장이 막혀 있어요)',true);return}
+  ghRender();ghMsg('설정을 저장하고 연결하는 중이에요…');
+  loadRemote().then(function(){var s=$('status');ghMsg(s.textContent,s.className.indexOf('err')>-1)});
+};
+$('gh-clear').onclick=function(){
+  if(!ls(GH_KEY)){ghMsg('지울 토큰이 없어요.');return}
+  lss(GH_KEY,'');ghRender();ghMsg('저장된 토큰을 지웠어요. 이제 이 브라우저에만 저장돼요.');
+};
+$('gh-show').onclick=function(){
+  var f=$('gh-token'),h=f.type==='password';
+  f.type=h?'text':'password';$('gh-show').textContent=h?'숨기기':'보기';
+};
+
+applyAll();loadRemote();
+</script>
+</body>
+</html>
