@@ -134,12 +134,14 @@ textarea.tgnote,.view.tgnote{min-height:72px;font-size:14px;padding:8px}
 .lkx{cursor:pointer;color:var(--sub);font-size:13px;padding:2px 6px;border-radius:6px}
 .lkx:hover{background:var(--hover)}
 /* 여행 기간 */
-.range{display:flex;align-items:center;flex-wrap:wrap;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 14px;margin:0 0 14px}
-.range label{color:var(--sub);font-size:13px;margin-right:4px}
-.range input{width:auto;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px}
-.range .rs{color:var(--sub)}
-.range .rl{margin-left:auto;font-weight:700;font-size:14px;background:var(--hover);border-radius:999px;padding:4px 12px}
-.range .rl:empty{display:none}
+.h2row{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:4px 14px}
+.rng{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--sub)}
+.rd{position:relative;cursor:pointer;padding:2px 4px;border-radius:6px}
+.rd:hover{background:var(--hover);color:var(--text)}
+.rd input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;padding:0}
+.rd.empty .rt{opacity:.7}
+.rl{font-weight:600;color:var(--text);margin-left:4px}
+.rl:empty{display:none}
 /* ---------- 디자인 개편 ---------- */
 :root{--bg:#fbfaf8;--text:#2b2a28;--sub:#8f8c86;--line:#ebe8e2;--hover:#f3f1ec;--card:#fff;--acc:#4f7cff;--cover:linear-gradient(120deg,#ffd9d4,#dbe7ff 55%,#d6f0e0)}
 @media (prefers-color-scheme:dark){:root{--bg:#16161a;--text:#ececea;--sub:#8b8b90;--line:#2a2a30;--hover:#232329;--card:#1e1e24;--acc:#7c9dff;--cover:linear-gradient(120deg,#3a2a2e,#26303f 55%,#243a2e)}}
@@ -252,13 +254,14 @@ body.side-closed .sbtn.open{display:block}
   </div>
 
   <hr>
-  <h2>📅 일정</h2>
-  <div class="range">
-    <label>🗓️ 여행 기간</label>
-    <input type="date" id="tStart" aria-label="출발일">
-    <span class="rs">~</span>
-    <input type="date" id="tEnd" aria-label="도착일">
-    <span class="rl" id="rLabel"></span>
+  <div class="h2row">
+    <h2>📅 일정</h2>
+    <div class="rng">
+      <span class="rd" id="rS"><span class="rt"></span><input type="date" id="tStart" aria-label="출발일"></span>
+      <span class="rsep">~</span>
+      <span class="rd" id="rE"><span class="rt"></span><input type="date" id="tEnd" aria-label="도착일"></span>
+      <span class="rl" id="rLabel"></span>
+    </div>
   </div>
   <div id="days"></div>
   <span class="addday" id="addDay">+ 하루 추가</span>
@@ -666,8 +669,11 @@ function dparse(v){var m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(v||'');return m?Date.UTC
 function dfmt(ms){return new Date(ms).toISOString().slice(0,10)}
 function rangeLabel(){
   var tr=D.trips[D.cur],a=dparse(tr.start),b=dparse(tr.end),l=$('rLabel');
-  if(a!==null&&b!==null&&b>=a){var n=Math.round((b-a)/864e5);l.textContent=n+'박 '+(n+1)+'일'}
-  else if(a!==null&&b!==null){l.textContent='날짜를 다시 확인해 주세요'}
+  function f(v){return v?v.replace(/-/g,'.'):''}
+  var sE=$('rS'),eE=$('rE');
+  sE.firstChild.textContent=tr.start?f(tr.start):'출발일';sE.classList.toggle('empty',!tr.start);
+  eE.firstChild.textContent=tr.end?(tr.start&&tr.end.slice(0,4)==tr.start.slice(0,4)?f(tr.end).slice(5):f(tr.end)):'도착일';eE.classList.toggle('empty',!tr.end);
+  if(a!==null&&b!==null&&b>=a){var n=Math.round((b-a)/864e5);l.textContent='· '+n+'박 '+(n+1)+'일'}
   else l.textContent='';
 }
 function applyRange(){
@@ -683,6 +689,7 @@ function applyRange(){
 }
 $('tStart').onchange=function(){var tr=D.trips[D.cur];tr.start=this.value;if(tr.end&&dparse(tr.end)<dparse(tr.start)){tr.end=tr.start;$('tEnd').value=tr.end}applyRange()};
 $('tEnd').onchange=function(){var tr=D.trips[D.cur];tr.end=this.value;if(!tr.start&&tr.end){tr.start=tr.end;$('tStart').value=tr.start}applyRange()};
+['tStart','tEnd'].forEach(function(id){$(id).onclick=function(){try{this.showPicker()}catch(e){}}});
 $('addDay').onclick=function(){D.days.push({date:'',items:[]});save();render()};
 
 /* ---------- 화면 설정 (아이콘·배경색) ---------- */
