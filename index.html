@@ -133,6 +133,13 @@ textarea.tgnote,.view.tgnote{min-height:72px;font-size:14px;padding:8px}
 .lkv a:hover{text-decoration:underline}
 .lkx{cursor:pointer;color:var(--sub);font-size:13px;padding:2px 6px;border-radius:6px}
 .lkx:hover{background:var(--hover)}
+/* 여행 기간 */
+.range{display:flex;align-items:center;flex-wrap:wrap;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 14px;margin:0 0 14px}
+.range label{color:var(--sub);font-size:13px;margin-right:4px}
+.range input{width:auto;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px}
+.range .rs{color:var(--sub)}
+.range .rl{margin-left:auto;font-weight:700;font-size:14px;background:var(--hover);border-radius:999px;padding:4px 12px}
+.range .rl:empty{display:none}
 /* ---------- 디자인 개편 ---------- */
 :root{--bg:#fbfaf8;--text:#2b2a28;--sub:#8f8c86;--line:#ebe8e2;--hover:#f3f1ec;--card:#fff;--acc:#4f7cff;--cover:linear-gradient(120deg,#ffd9d4,#dbe7ff 55%,#d6f0e0)}
 @media (prefers-color-scheme:dark){:root{--bg:#16161a;--text:#ececea;--sub:#8b8b90;--line:#2a2a30;--hover:#232329;--card:#1e1e24;--acc:#7c9dff;--cover:linear-gradient(120deg,#3a2a2e,#26303f 55%,#243a2e)}}
@@ -246,6 +253,13 @@ body.side-closed .sbtn.open{display:block}
 
   <hr>
   <h2>📅 일정</h2>
+  <div class="range">
+    <label>🗓️ 여행 기간</label>
+    <input type="date" id="tStart" aria-label="출발일">
+    <span class="rs">~</span>
+    <input type="date" id="tEnd" aria-label="도착일">
+    <span class="rl" id="rLabel"></span>
+  </div>
   <div id="days"></div>
   <span class="addday" id="addDay">+ 하루 추가</span>
 
@@ -329,6 +343,7 @@ function fixD(){
   if(!D.trips||!D.trips.length)D.trips=[{name:'',days:(D.days&&D.days.length)?D.days:[{date:'',items:[]}],toggles:D.toggles||defToggles(D.memo)}];
   D.trips.forEach(function(t,i){
     if(!t.name&&i==0&&_t)t.name=_t;
+    t.start=t.start||'';t.end=t.end||'';
     if(t.budget===undefined)t.budget=(i==0?_b:'')||'';
     t.name=t.name||'';
     if(!t.days||!t.days.length)t.days=[{date:'',items:[]}];
@@ -481,7 +496,7 @@ function renderSide(){
   });
 }
 $('tAdd').onclick=function(){
-  D.trips.push({name:'',budget:'',days:[{date:'',items:[]}],toggles:defToggles('')});
+  D.trips.push({name:'',budget:'',start:'',end:'',days:[{date:'',items:[]}],toggles:defToggles('')});
   D.cur=D.trips.length-1;link();save();applyAll();
   if(isMobile())setSide(false);
   $('title').focus();
@@ -494,6 +509,7 @@ function applyAll(){
   var tr=D.trips[D.cur];
   renderSide();
   $('title').value=tr.name;$('budget').value=tr.budget;
+  $('tStart').value=tr.start;$('tEnd').value=tr.end;rangeLabel();
   renderToggles();
   document.title=tr.name||'여행 플래너';
   render();applyLook();
@@ -646,6 +662,27 @@ function render(){
 
 $('title').oninput=function(){D.trips[D.cur].name=this.value;document.title=this.value||'여행 플래너';renderSide();save()};
 $('budget').oninput=function(){D.trips[D.cur].budget=this.value;save();totals()};
+function dparse(v){var m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(v||'');return m?Date.UTC(+m[1],+m[2]-1,+m[3]):null}
+function dfmt(ms){return new Date(ms).toISOString().slice(0,10)}
+function rangeLabel(){
+  var tr=D.trips[D.cur],a=dparse(tr.start),b=dparse(tr.end),l=$('rLabel');
+  if(a!==null&&b!==null&&b>=a){var n=Math.round((b-a)/864e5);l.textContent=n+'박 '+(n+1)+'일'}
+  else if(a!==null&&b!==null){l.textContent='날짜를 다시 확인해 주세요'}
+  else l.textContent='';
+}
+function applyRange(){
+  var tr=D.trips[D.cur],a=dparse(tr.start),b=dparse(tr.end);
+  if(a!==null&&b!==null&&b<a){rangeLabel();return}
+  if(a!==null&&b!==null){
+    var n=Math.round((b-a)/864e5)+1;
+    while(D.days.length<n)D.days.push({date:'',items:[]});
+    while(D.days.length>n&&!D.days[D.days.length-1].items.length)D.days.pop();
+  }
+  if(a!==null)D.days.forEach(function(d,i){d.date=dfmt(a+i*864e5)});
+  rangeLabel();save();render();
+}
+$('tStart').onchange=function(){var tr=D.trips[D.cur];tr.start=this.value;if(tr.end&&dparse(tr.end)<dparse(tr.start)){tr.end=tr.start;$('tEnd').value=tr.end}applyRange()};
+$('tEnd').onchange=function(){var tr=D.trips[D.cur];tr.end=this.value;if(!tr.start&&tr.end){tr.start=tr.end;$('tStart').value=tr.start}applyRange()};
 $('addDay').onclick=function(){D.days.push({date:'',items:[]});save();render()};
 
 /* ---------- 화면 설정 (아이콘·배경색) ---------- */
