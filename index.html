@@ -125,6 +125,14 @@ textarea.tgnote,.view.tgnote{min-height:72px;font-size:14px;padding:8px}
 .adds{margin-left:24px}
 .adds .add{margin:6px 4px 0 0}
 
+/* 링크 칸 */
+.lk{margin:4px 0 0 2px}
+.urlin{font-size:14px;padding:6px}
+.lkv{display:none;align-items:center;gap:8px;padding:5px 8px;font-size:14px;min-width:0}
+.lkv a{color:var(--acc);text-decoration:none;font-weight:600;background:var(--hover);border-radius:999px;padding:3px 12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lkv a:hover{text-decoration:underline}
+.lkx{cursor:pointer;color:var(--sub);font-size:13px;padding:2px 6px;border-radius:6px}
+.lkx:hover{background:var(--hover)}
 /* ---------- 디자인 개편 ---------- */
 :root{--bg:#fbfaf8;--text:#2b2a28;--sub:#8f8c86;--line:#ebe8e2;--hover:#f3f1ec;--card:#fff;--acc:#4f7cff;--cover:linear-gradient(120deg,#ffd9d4,#dbe7ff 55%,#d6f0e0)}
 @media (prefers-color-scheme:dark){:root{--bg:#16161a;--text:#ececea;--sub:#8b8b90;--line:#2a2a30;--hover:#232329;--card:#1e1e24;--acc:#7c9dff;--cover:linear-gradient(120deg,#3a2a2e,#26303f 55%,#243a2e)}}
@@ -494,9 +502,39 @@ function won(n){return Number(n||0).toLocaleString('ko-KR')+'원'}
 function tsum(t){return (t.toggles||[]).reduce(function(s,g){return s+(g.items||[]).reduce(function(a,i){return a+Number(i.cost||0)},0)},0)}
 function dtot(d){return d.items.reduce(function(s,i){return s+Number(i.cost||0)},0)}
 function $(id){return document.getElementById(id)}
+function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function shortUrl(u){
+  try{
+    var x=new URL(u),h=x.hostname.replace(/^www\./,''),p=(x.pathname+x.search).replace(/\/$/,'');
+    if(p.length<=1)return h;
+    return h+(p.length>18?p.slice(0,16)+'…':p);
+  }catch(e){return u.length>30?u.slice(0,28)+'…':u}
+}
 function linkify(t){
   var e=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  return e.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+  return e.replace(/(https?:\/\/[^\s<]+)/g,function(m){
+    var raw=m.replace(/&amp;/g,'&');
+    return '<a href="'+m+'" target="_blank" rel="noopener" title="'+esc(raw)+'">'+esc(shortUrl(raw))+'</a>';
+  });
+}
+function linkBox(obj,key){
+  var w=document.createElement('div');w.className='lk';
+  var inp=document.createElement('input');inp.className='urlin';inp.placeholder='🔗 링크 붙여넣기 (예약 페이지 등)';inp.value=obj[key]||'';
+  var v=document.createElement('div');v.className='lkv';
+  function show(){
+    var s=inp.value.trim();
+    if(s){
+      var h=/^https?:\/\//i.test(s)?s:'https://'+s;
+      v.innerHTML='<a href="'+esc(h)+'" target="_blank" rel="noopener" title="'+esc(h)+'">🔗 '+esc(shortUrl(h))+'</a><span class="lkx" title="수정">✎</span>';
+      v.querySelector('.lkx').onclick=function(){v.style.display='none';inp.style.display='block';inp.focus()};
+      v.style.display='flex';inp.style.display='none';
+    }else{v.style.display='none';inp.style.display='block'}
+  }
+  inp.oninput=function(){obj[key]=inp.value;save()};
+  inp.onblur=show;
+  inp.onkeydown=function(e){if(e.key==='Enter')inp.blur()};
+  w.appendChild(inp);w.appendChild(v);show();
+  return w;
 }
 function noteBox(cls,ph,obj,key){
   var w=document.createElement('div');
@@ -559,6 +597,7 @@ function buildItem(it,list,ii,rerender){
         r.innerHTML='<div class="b"><div class="card">'
           +'<div class="pl"><span class="emo" title="이모티콘 고르기"></span><input class="place" placeholder="어디 가요? 뭐 해요?"></div>'
           +'<div class="meta"><select>'+opts+'</select><div class="cost"><input type="number" placeholder="금액"><span>원</span></div></div>'
+          +'<div class="lkb"></div>'
           +'<div class="nb"></div>'
           +'<span class="del" title="삭제">✕</span></div></div>';
         var pl=r.querySelector('.place'),co=r.querySelector('.cost input'),sel=r.querySelector('select');
@@ -571,6 +610,7 @@ function buildItem(it,list,ii,rerender){
           var pop=emojiPicker(function(x){it.icon=x;save();paintE();closePop()},function(){it.icon='';save();paintE();closePop()},'이모티콘 지우기');
           r.querySelector('.pl').appendChild(pop);
         };
+        if(rerender===renderToggles)r.querySelector('.lkb').appendChild(linkBox(it,'url'));
         r.querySelector('.nb').appendChild(noteBox('note','자유롭게 적어보세요 (예약 정보, 후기, 링크 붙여넣기 등)',it,'memo'));
         pl.oninput=function(){it.place=pl.value;save()};
         co.oninput=function(){it.cost=co.value;save();totals()};
